@@ -1,228 +1,207 @@
 /* ============================================ */
-/* ALGOLIA SEARCH BOX - EXTERNAL STYLESHEET   */
+/* ALGOLIA AUTOCOMPLETE - HYBRID MODE CSS     */
+/* Styling pentru dropdown Algolia           */
+/* Se integreaza cu input-ul MerchantPro     */
 /* ============================================ */
-/* Host this file on your CDN or server       */
-/* Include: <link rel="stylesheet" href="path/to/algolia-search.css"> */
 
-/* Container principal pentru search */
-.algolia-search-container {
-    position: relative;
-    max-width: 600px;
-    width: 100%;
-    margin: 0 auto;
-}
-
-/* Search input styling */
-#algolia-search-input {
-    width: 100%;
-    padding: 12px 50px 12px 20px;
-    font-size: 16px;
-    border: 2px solid #e0e0e0;
-    border-radius: 50px;
-    outline: none;
-    transition: all 0.3s ease;
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-#algolia-search-input:focus {
-    border-color: #5468ff;
-    box-shadow: 0 4px 12px rgba(84, 104, 255, 0.2);
-}
-
-#algolia-search-input::placeholder {
-    color: #999;
-}
-
-/* Search icon button */
-.algolia-search-icon {
+/* Dropdown container */
+.algolia-autocomplete-dropdown {
     position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    color: #5468ff;
-    font-size: 20px;
-    transition: color 0.3s ease;
-}
-
-.algolia-search-icon:hover {
-    color: #3646d4;
-}
-
-/* Autocomplete dropdown container */
-.aa-Autocomplete {
-    width: 100%;
-}
-
-.aa-Panel {
-    position: absolute;
-    top: calc(100% + 8px);
+    top: 100%;
     left: 0;
     right: 0;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    margin-top: 4px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
     max-height: 500px;
     overflow-y: auto;
-    z-index: 9999;
 }
 
-.aa-List {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+/* Results list */
+.algolia-results-list {
+    padding: 8px 0;
 }
 
-/* Individual product item in dropdown */
-.aa-Item {
+/* Individual result item */
+.algolia-result-item {
+    display: flex;
+    align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
+    text-decoration: none;
+    color: #333;
     transition: background-color 0.2s ease;
 }
 
-.aa-Item:hover,
-.aa-Item[aria-selected="true"] {
-    background-color: #f8f9ff;
+.algolia-result-item:hover {
+    background-color: #f5f5f5;
 }
 
-.aa-Item:last-child {
-    border-bottom: none;
-}
-
-/* Product layout in autocomplete */
-.algolia-autocomplete-product {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.algolia-autocomplete-image {
+/* Product image */
+.algolia-result-image {
+    flex-shrink: 0;
     width: 60px;
     height: 60px;
-    object-fit: cover;
-    border-radius: 8px;
-    flex-shrink: 0;
+    margin-right: 12px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #f9f9f9;
 }
 
-.algolia-autocomplete-details {
+.algolia-result-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Product content */
+.algolia-result-content {
     flex: 1;
     min-width: 0;
 }
 
-.algolia-autocomplete-title {
+.algolia-result-title {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
     color: #333;
-    margin: 0 0 4px 0;
+    margin-bottom: 4px;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
-.algolia-autocomplete-price {
-    font-size: 16px;
-    font-weight: 700;
-    color: #5468ff;
-    margin: 0;
-}
-
-.algolia-autocomplete-stock {
-    font-size: 12px;
-    color: #22c55e;
-    margin: 4px 0 0 0;
-}
-
-.algolia-autocomplete-stock.out-of-stock {
-    color: #ef4444;
-}
-
-/* Highlighted search terms */
-.aa-ItemContentTitle mark {
-    background-color: #fff4cc;
-    color: #333;
-    font-weight: 700;
+/* Highlighting pentru termeni cautati */
+.algolia-result-title mark,
+.algolia-result-title em {
+    background-color: #fff4e6;
+    color: #d97706;
+    font-style: normal;
+    font-weight: 600;
     padding: 0 2px;
 }
 
-/* Footer with "View all results" link */
-.aa-Item--footer {
-    display: flex;
-    justify-content: center;
-    padding: 16px;
-    background-color: #f8f9ff;
-    border-top: 2px solid #e0e0e0;
-}
-
-.aa-ViewAllLink {
-    color: #5468ff;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 14px;
-    transition: color 0.2s ease;
-}
-
-.aa-ViewAllLink:hover {
-    color: #3646d4;
-    text-decoration: underline;
-}
-
-/* Loading state */
-.aa-LoadingIndicator {
+/* Meta info (pret + stoc) */
+.algolia-result-meta {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 20px;
+    gap: 12px;
+    font-size: 13px;
+}
+
+.algolia-price {
+    font-weight: 600;
+    color: #059669;
+}
+
+/* Stock badges */
+.algolia-stock {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.algolia-stock--available {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.algolia-stock--unavailable {
+    background-color: #fee2e2;
+    color: #991b1b;
 }
 
 /* No results message */
-.aa-NoResults {
-    padding: 20px;
+.algolia-no-results {
+    padding: 24px 16px;
     text-align: center;
-    color: #666;
+    color: #6b7280;
+}
+
+.algolia-no-results p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.algolia-no-results strong {
+    color: #374151;
+}
+
+/* Footer "View all results" */
+.algolia-results-footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 12px 16px;
+    background-color: #f9fafb;
+}
+
+.algolia-view-all {
+    display: block;
+    text-align: center;
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.algolia-view-all:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+/* Scrollbar styling */
+.algolia-autocomplete-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.algolia-autocomplete-dropdown::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.algolia-autocomplete-dropdown::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.algolia-autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
-    .algolia-search-container {
-        max-width: 100%;
-        padding: 0 15px;
+    .algolia-autocomplete-dropdown {
+        max-height: 400px;
     }
 
-    #algolia-search-input {
-        padding: 10px 40px 10px 15px;
-        font-size: 14px;
+    .algolia-result-item {
+        padding: 10px 12px;
     }
 
-    .algolia-autocomplete-image {
+    .algolia-result-image {
         width: 50px;
         height: 50px;
+        margin-right: 10px;
     }
 
-    .algolia-autocomplete-title {
+    .algolia-result-title {
         font-size: 13px;
     }
 
-    .algolia-autocomplete-price {
-        font-size: 14px;
+    .algolia-result-meta {
+        font-size: 12px;
+        gap: 8px;
     }
 }
 
-/* Algolia logo (branding) */
-.algolia-powered-by {
-    padding: 8px 16px;
-    text-align: center;
-    font-size: 11px;
-    color: #999;
-    border-top: 1px solid #f0f0e0;
-}
-
-.algolia-powered-by a {
-    color: #5468ff;
-    text-decoration: none;
-    font-weight: 600;
+/* Asigura ca parent-ul input-ului are position: relative */
+.search-inline__wrapper,
+.input-group {
+    position: relative !important;
 }
