@@ -1,0 +1,228 @@
+/* ============================================ */
+/* ALGOLIA SEARCH BOX - EXTERNAL STYLESHEET   */
+/* ============================================ */
+/* Host this file on your CDN or server       */
+/* Include: <link rel="stylesheet" href="path/to/algolia-search.css"> */
+
+/* Container principal pentru search */
+.algolia-search-container {
+    position: relative;
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Search input styling */
+#algolia-search-input {
+    width: 100%;
+    padding: 12px 50px 12px 20px;
+    font-size: 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 50px;
+    outline: none;
+    transition: all 0.3s ease;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#algolia-search-input:focus {
+    border-color: #5468ff;
+    box-shadow: 0 4px 12px rgba(84, 104, 255, 0.2);
+}
+
+#algolia-search-input::placeholder {
+    color: #999;
+}
+
+/* Search icon button */
+.algolia-search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: #5468ff;
+    font-size: 20px;
+    transition: color 0.3s ease;
+}
+
+.algolia-search-icon:hover {
+    color: #3646d4;
+}
+
+/* Autocomplete dropdown container */
+.aa-Autocomplete {
+    width: 100%;
+}
+
+.aa-Panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    max-height: 500px;
+    overflow-y: auto;
+    z-index: 9999;
+}
+
+.aa-List {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Individual product item in dropdown */
+.aa-Item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.aa-Item:hover,
+.aa-Item[aria-selected="true"] {
+    background-color: #f8f9ff;
+}
+
+.aa-Item:last-child {
+    border-bottom: none;
+}
+
+/* Product layout in autocomplete */
+.algolia-autocomplete-product {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.algolia-autocomplete-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.algolia-autocomplete-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.algolia-autocomplete-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 4px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.algolia-autocomplete-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: #5468ff;
+    margin: 0;
+}
+
+.algolia-autocomplete-stock {
+    font-size: 12px;
+    color: #22c55e;
+    margin: 4px 0 0 0;
+}
+
+.algolia-autocomplete-stock.out-of-stock {
+    color: #ef4444;
+}
+
+/* Highlighted search terms */
+.aa-ItemContentTitle mark {
+    background-color: #fff4cc;
+    color: #333;
+    font-weight: 700;
+    padding: 0 2px;
+}
+
+/* Footer with "View all results" link */
+.aa-Item--footer {
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+    background-color: #f8f9ff;
+    border-top: 2px solid #e0e0e0;
+}
+
+.aa-ViewAllLink {
+    color: #5468ff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: color 0.2s ease;
+}
+
+.aa-ViewAllLink:hover {
+    color: #3646d4;
+    text-decoration: underline;
+}
+
+/* Loading state */
+.aa-LoadingIndicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* No results message */
+.aa-NoResults {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .algolia-search-container {
+        max-width: 100%;
+        padding: 0 15px;
+    }
+
+    #algolia-search-input {
+        padding: 10px 40px 10px 15px;
+        font-size: 14px;
+    }
+
+    .algolia-autocomplete-image {
+        width: 50px;
+        height: 50px;
+    }
+
+    .algolia-autocomplete-title {
+        font-size: 13px;
+    }
+
+    .algolia-autocomplete-price {
+        font-size: 14px;
+    }
+}
+
+/* Algolia logo (branding) */
+.algolia-powered-by {
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 11px;
+    color: #999;
+    border-top: 1px solid #f0f0e0;
+}
+
+.algolia-powered-by a {
+    color: #5468ff;
+    text-decoration: none;
+    font-weight: 600;
+}
