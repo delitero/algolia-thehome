@@ -1,8 +1,7 @@
 /* ============================================ */
-/* ALGOLIA AUTOCOMPLETE SEARCH - EXTERNAL JS  */
+/* ALGOLIA SEARCH - HYBRID MODE               */
+/* Foloseste input-ul existent MerchantPro    */
 /* ============================================ */
-/* Host this file on your CDN or server       */
-/* Include: <script src="path/to/algolia-search.js"></script> */
 
 (function() {
     'use strict';
@@ -11,142 +10,196 @@
     const ALGOLIA_APP_ID = '8FK79GDKP2';
     const ALGOLIA_SEARCH_KEY = 'c26b9afee14ceab590f8a5a6f74b186e';
     const ALGOLIA_INDEX = 'products';
-    const SEARCH_RESULTS_URL = '/search-results'; // Modifică dacă ai alt URL pentru rezultate
+    const SEARCH_RESULTS_URL = '/search-results';
+    const MIN_CHARS = 2; // Minim caractere pentru a declansa cautarea
 
-    // Wait for DOM and Algolia libraries to load
-    if (typeof algoliasearch === 'undefined' || typeof window['@algolia/autocomplete-js'] === 'undefined') {
-        console.error('❌ Algolia libraries not loaded. Ensure algoliasearch and autocomplete-js are included before this script.');
-        return;
-    }
-
-    // Initialize Algolia client
-    const searchClient = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_SEARCH_KEY);
-    const index = searchClient.initIndex(ALGOLIA_INDEX);
-
-    // === AUTOCOMPLETE CONFIGURATION ===
-    const { autocomplete } = window['@algolia/autocomplete-js'];
-
-    const autocompleteInstance = autocomplete({
-        container: '#algolia-search-input',
-        placeholder: 'Caută produse, categorii, branduri...',
-        detachedMediaQuery: '', // Keeps autocomplete attached to input on mobile
-
-        // Retrieve suggestions from Algolia
-        getSources({ query }) {
-            if (!query) {
-                return [];
-            }
-
-            return [
-                {
-                    sourceId: 'products',
-
-                    // Search Algolia index
-                    getItems() {
-                        return index.search(query, {
-                            hitsPerPage: 8,
-                            attributesToRetrieve: [
-                                'objectID',
-                                'title',
-                                'sku',
-                                'url',
-                                'image_url',
-                                'price_gross',
-                                'sale_price',
-                                'currency',
-                                'stock',
-                                'availability'
-                            ],
-                            attributesToHighlight: ['title']
-                        }).then(({ hits }) => hits);
-                    },
-
-                    // Render product items in dropdown
-                    templates: {
-                        item({ item, components, html }) {
-                            const price = item.sale_price || item.price_gross;
-                            const isInStock = item.stock > 0 && item.availability === 'in stock';
-
-                            return html`
-                                <a href="${item.url}" class="algolia-autocomplete-product">
-                                    <img
-                                        src="${item.image_url || '/images/no-image.jpg'}"
-                                        alt="${item.title}"
-                                        class="algolia-autocomplete-image"
-                                        onerror="this.src='/images/no-image.jpg'"
-                                    />
-                                    <div class="algolia-autocomplete-details">
-                                        <h4 class="algolia-autocomplete-title">
-                                            ${components.Highlight({ hit: item, attribute: 'title' })}
-                                        </h4>
-                                        <p class="algolia-autocomplete-price">
-                                            ${price.toFixed(2)} ${item.currency}
-                                        </p>
-                                        <p class="algolia-autocomplete-stock ${isInStock ? '' : 'out-of-stock'}">
-                                            ${isInStock ? 'În stoc' : 'Stoc epuizat'}
-                                        </p>
-                                    </div>
-                                </a>
-                            `;
-                        },
-
-                        // Footer with "View all results" link
-                        footer({ html, state }) {
-                            const query = state.query;
-                            return html`
-                                <div class="aa-Item--footer">
-                                    <a href="${SEARCH_RESULTS_URL}?q=${encodeURIComponent(query)}" class="aa-ViewAllLink">
-                                        Vezi toate rezultatele pentru "${query}"
-                                    </a>
-                                </div>
-                                <div class="algolia-powered-by">
-                                    Powered by <a href="https://www.algolia.com/" target="_blank" rel="noopener">Algolia</a>
-                                </div>
-                            `;
-                        },
-
-                        // No results message
-                        noResults({ html }) {
-                            return html`
-                                <div class="aa-NoResults">
-                                    <p>Nu am găsit produse pentru căutarea ta.</p>
-                                    <p>Încearcă alte cuvinte cheie.</p>
-                                </div>
-                            `;
-                        }
-                    }
-                }
-            ];
-        },
-
-        // Handle enter key press - redirect to search results page
-        onSubmit({ state }) {
-            const query = state.query;
-            if (query) {
-                window.location.href = `${SEARCH_RESULTS_URL}?q=${encodeURIComponent(query)}`;
-            }
+    // Asteapta ca DOM si Algolia sa fie incarcate
+    function init() {
+        // Verifica daca Algolia este incarcat
+        if (typeof algoliasearch === 'undefined') {
+            console.error('❌ Algolia library not loaded');
+            return;
         }
-    });
 
-    // === SEARCH ICON CLICK HANDLER ===
-    const searchIcon = document.querySelector('.algolia-search-icon');
-    if (searchIcon) {
-        searchIcon.addEventListener('click', function() {
-            const query = document.getElementById('algolia-search-input').value;
-            if (query) {
-                window.location.href = `${SEARCH_RESULTS_URL}?q=${encodeURIComponent(query)}`;
+        // Gaseste input-ul MerchantPro existent
+        const searchInput = document.querySelector('.search-inline__input, input[data-search-input]');
+
+        if (!searchInput) {
+            console.error('❌ MerchantPro search input not found');
+            return;
+        }
+
+        console.log('✅ Algolia Hybrid Search initialized');
+
+        // Initialize Algolia client
+        const searchClient = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_SEARCH_KEY);
+        const index = searchClient.initIndex(ALGOLIA_INDEX);
+
+        // Creeaza dropdown pentru rezultate
+        const dropdown = createDropdown(searchInput);
+
+        // Dezactiveaza autocomplete-ul MerchantPro existent
+        searchInput.removeAttribute('data-search-autocomplete');
+        searchInput.setAttribute('data-algolia-search', 'true');
+
+        // Variables pentru debounce
+        let searchTimeout;
+        let currentQuery = '';
+
+        // Event listener pentru input
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            currentQuery = query;
+
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+
+            // Ascunde dropdown daca query este prea scurt
+            if (query.length < MIN_CHARS) {
+                hideDropdown(dropdown);
+                return;
+            }
+
+            // Debounce search (asteapta 200ms dupa ce utilizatorul termina de scris)
+            searchTimeout = setTimeout(() => {
+                performSearch(index, query, dropdown, searchInput);
+            }, 200);
+        });
+
+        // Event listener pentru Enter key
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const query = e.target.value.trim();
+                if (query) {
+                    window.location.href = `${SEARCH_RESULTS_URL}?q=${encodeURIComponent(query)}`;
+                }
+            }
+        });
+
+        // Ascunde dropdown cand se da click in afara
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                hideDropdown(dropdown);
+            }
+        });
+
+        // Arata dropdown cand se face focus pe input (daca are query)
+        searchInput.addEventListener('focus', function() {
+            if (currentQuery.length >= MIN_CHARS) {
+                showDropdown(dropdown);
             }
         });
     }
 
-    // === MOBILE: Close autocomplete when clicking outside ===
-    document.addEventListener('click', function(event) {
-        const searchContainer = document.querySelector('.algolia-search-container');
-        if (searchContainer && !searchContainer.contains(event.target)) {
-            autocompleteInstance.setIsOpen(false);
+    // Creeaza dropdown-ul pentru rezultate
+    function createDropdown(inputElement) {
+        const dropdown = document.createElement('div');
+        dropdown.className = 'algolia-autocomplete-dropdown';
+        dropdown.style.display = 'none';
+
+        // Insereaza dropdown imediat dupa input
+        inputElement.parentNode.insertBefore(dropdown, inputElement.nextSibling);
+
+        return dropdown;
+    }
+
+    // Executa cautarea in Algolia
+    function performSearch(index, query, dropdown, inputElement) {
+        index.search(query, {
+            hitsPerPage: 8,
+            attributesToRetrieve: [
+                'objectID',
+                'title',
+                'url',
+                'image_url',
+                'price_gross',
+                'currency',
+                'stock',
+                'availability',
+                'category_name'
+            ],
+            attributesToHighlight: ['title']
+        }).then(({ hits }) => {
+            renderResults(hits, dropdown, query);
+            showDropdown(dropdown);
+        }).catch(error => {
+            console.error('Algolia search error:', error);
+            hideDropdown(dropdown);
+        });
+    }
+
+    // Rendereaza rezultatele
+    function renderResults(hits, dropdown, query) {
+        if (hits.length === 0) {
+            dropdown.innerHTML = `
+                <div class="algolia-no-results">
+                    <p>Nu am găsit rezultate pentru "<strong>${escapeHtml(query)}</strong>"</p>
+                </div>
+            `;
+            return;
         }
-    });
 
-    console.log('✅ Algolia Autocomplete Search initialized successfully');
+        let html = '<div class="algolia-results-list">';
+
+        hits.forEach(hit => {
+            const title = hit._highlightResult?.title?.value || hit.title || 'Produs';
+            const price = hit.price_gross ? `${hit.price_gross} ${hit.currency || 'RON'}` : 'Preț la cerere';
+            const availability = hit.availability === 'in stock' ?
+                '<span class="algolia-stock algolia-stock--available">În stoc</span>' :
+                '<span class="algolia-stock algolia-stock--unavailable">Stoc epuizat</span>';
+            const image = hit.image_url || 'https://via.placeholder.com/80x80?text=No+Image';
+
+            html += `
+                <a href="${hit.url}" class="algolia-result-item">
+                    <div class="algolia-result-image">
+                        <img src="${image}" alt="${hit.title}" loading="lazy">
+                    </div>
+                    <div class="algolia-result-content">
+                        <div class="algolia-result-title">${title}</div>
+                        <div class="algolia-result-meta">
+                            <span class="algolia-price">${price}</span>
+                            ${availability}
+                        </div>
+                    </div>
+                </a>
+            `;
+        });
+
+        html += `
+            <div class="algolia-results-footer">
+                <a href="${SEARCH_RESULTS_URL}?q=${encodeURIComponent(query)}" class="algolia-view-all">
+                    Vezi toate rezultatele →
+                </a>
+            </div>
+        `;
+        html += '</div>';
+
+        dropdown.innerHTML = html;
+    }
+
+    // Show dropdown
+    function showDropdown(dropdown) {
+        dropdown.style.display = 'block';
+    }
+
+    // Hide dropdown
+    function hideDropdown(dropdown) {
+        dropdown.style.display = 'none';
+    }
+
+    // Escape HTML pentru securitate
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Initialize cand DOM este gata
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
 })();
-
