@@ -9,7 +9,7 @@
     // === CONFIGURARE ALGOLIA ===
     const ALGOLIA_APP_ID = '8FK79GDKP2';
     const ALGOLIA_SEARCH_KEY = 'c26b9afee14ceab590f8a5a6f74b186e';
-    const ALGOLIA_INDEX = 'products';
+    const ALGOLIA_INDEX = 'thehome-sandbox';
     const SEARCH_RESULTS_URL = '/search-results';
     const MIN_CHARS = 2; // Minim caractere pentru a declansa cautarea
 
