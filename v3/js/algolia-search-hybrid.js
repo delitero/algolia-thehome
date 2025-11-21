@@ -10,7 +10,7 @@
     // === CONFIGURARE ALGOLIA ===
     const ALGOLIA_APP_ID = '8FK79GDKP2';
     const ALGOLIA_SEARCH_KEY = 'c26b9afee14ceab590f8a5a6f74b186e';
-    const ALGOLIA_INDEX = 'thehome-sandbox';
+    const ALGOLIA_INDEX = 'products_v3';  // Index cu sale_price support
     const SEARCH_RESULTS_URL = '/catalog/q'; // Fixed: redirect to MerchantPro catalog
     const MIN_CHARS = 2; // Minim caractere pentru a declansa cautarea
 
@@ -114,15 +114,17 @@
     // Executa cautarea in Algolia
     function performSearch(index, query, dropdown, inputElement) {
         index.search(query, {
-            hitsPerPage: 8,
+            hitsPerPage: 15,  // 15 rezultate in dropdown
             attributesToRetrieve: [
                 'objectID',
                 'id',
                 'product name',      // Field name din Algolia Dashboard
                 'product url',       // Field name din Algolia Dashboard
                 'main image url',    // Field name din Algolia Dashboard
-                'price',             // Field name din Algolia Dashboard (string)
-                'stock',             // Field name din Algolia Dashboard (string)
+                'price',             // Regular price (price_gross)
+                'sale_price',        // Discounted price (if available)
+                'price_gross',       // Original price
+                'price_net',         // Net price
                 'manufacturer',      // Manufacturer name
                 'ean',               // EAN code (may be in scientific notation)
                 'category'
@@ -195,49 +197,38 @@
             // Fix EAN format (convert scientific notation to normal number)
             const ean = fixEAN(hit.ean);
 
-            // Parse price (it's stored as string "3459" in Algolia Dashboard format)
-            // NOTE: Current index doesn't have sale_price, only "price"
-            // When backend sync is fixed, we'll have both price_gross and sale_price
+            // Parse price with sale_price support
             let priceHtml = '';
-            if (hit.price) {
-                const priceValue = parseFloat(hit.price);
-                if (!isNaN(priceValue) && priceValue > 0) {
-                    // Format Romanian price: 3.459,00 RON
-                    const priceFormatted = new Intl.NumberFormat('ro-RO', {
-                        style: 'decimal',
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                    }).format(priceValue) + ' RON';
 
-                    // TODO: When sale_price is available in index, use this logic:
-                    // if (hit.sale_price && hit.sale_price < hit.price) {
-                    //     const salePriceFormatted = formatPrice(hit.sale_price);
-                    //     priceHtml = `
-                    //         <span class="algolia-price-sale">${salePriceFormatted}</span>
-                    //         <span class="algolia-price-original">${priceFormatted}</span>
-                    //     `;
-                    // } else {
-                    //     priceHtml = `<span class="algolia-price">${priceFormatted}</span>`;
-                    // }
+            // Helper function to format Romanian price
+            const formatPrice = (value) => {
+                return new Intl.NumberFormat('ro-RO', {
+                    style: 'decimal',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(value) + ' RON';
+            };
 
-                    // Current implementation (no sale_price available)
-                    priceHtml = `<span class="algolia-price">${priceFormatted}</span>`;
-                } else {
-                    priceHtml = '<span class="algolia-price">Preț la cerere</span>';
-                }
+            // Determine which price fields are available
+            const salePrice = hit.sale_price ? parseFloat(hit.sale_price) : null;
+            const regularPrice = hit.price_gross ? parseFloat(hit.price_gross) :
+                                 (hit.price ? parseFloat(hit.price) : null);
+
+            // Display logic: Sale price (red/bold) + Original price (strikethrough)
+            if (salePrice && regularPrice && salePrice < regularPrice) {
+                // Product is on sale - show both prices
+                const salePriceFormatted = formatPrice(salePrice);
+                const regularPriceFormatted = formatPrice(regularPrice);
+                priceHtml = `
+                    <span class="algolia-price-sale">${salePriceFormatted}</span>
+                    <span class="algolia-price-original">${regularPriceFormatted}</span>
+                `;
+            } else if (regularPrice && regularPrice > 0) {
+                // No sale - show regular price only
+                priceHtml = `<span class="algolia-price">${formatPrice(regularPrice)}</span>`;
             } else {
+                // No price available
                 priceHtml = '<span class="algolia-price">Preț la cerere</span>';
-            }
-
-            // Determine stock availability (stock is string "0" or "1" or actual quantity)
-            let availabilityHtml = '';
-            if (hit.stock !== undefined && hit.stock !== null) {
-                const stockValue = parseInt(hit.stock, 10);
-                if (!isNaN(stockValue) && stockValue > 0) {
-                    availabilityHtml = '<span class="algolia-stock algolia-stock--available">În stoc</span>';
-                } else {
-                    availabilityHtml = '<span class="algolia-stock algolia-stock--unavailable">Stoc epuizat</span>';
-                }
             }
 
             html += `
@@ -253,7 +244,6 @@
                         ${manufacturer ? `<div class="algolia-manufacturer">${escapeHtml(manufacturer)}</div>` : ''}
                         <div class="algolia-result-meta">
                             ${priceHtml}
-                            ${availabilityHtml}
                         </div>
                     </div>
                 </a>
